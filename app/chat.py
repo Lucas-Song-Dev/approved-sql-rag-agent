@@ -137,7 +137,8 @@ class ClaudeIntentSelector:
             max_tokens=700,
             system=(
                 "Answer the user's security question concisely from the supplied database "
-                "result only. State when no rows matched. Do not invent facts or expose SQL."
+                "result only. State when no rows matched. Do not invent facts or expose SQL. "
+                "Return plain text with short paragraphs and no Markdown formatting."
             ),
             messages=[
                 {
