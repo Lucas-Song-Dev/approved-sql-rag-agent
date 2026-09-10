@@ -5,7 +5,7 @@ from typing import Any, Protocol
 from anthropic import AsyncAnthropic
 
 from app.catalog import CatalogRepository
-from app.domain import CatalogRecord, Role
+from app.domain import ROLE_ACCESS, CatalogRecord, Role
 from app.executor import QueryExecutor
 
 
@@ -25,7 +25,15 @@ class DeterministicIntentSelector:
     ) -> tuple[str, dict[str, Any], str]:
         if not candidates:
             raise LookupError("No accessible approved query matched the request")
-        record = candidates[0]
+        asset_matches = [
+            item
+            for item in candidates
+            if "asset" in item.id and "asset" in prompt.lower() and "open" in prompt.lower()
+        ]
+        record = max(
+            asset_matches or candidates[:1],
+            key=lambda item: ROLE_ACCESS[item.min_role],
+        )
         parameters: dict[str, Any] = {}
         for name, spec in record.parameters.items():
             match = re.search(rf"\b{name}\s*(?:=|is|:)?\s*([\w.-]+)", prompt, re.IGNORECASE)
@@ -77,6 +85,8 @@ class ClaudeIntentSelector:
                 "name": item.name,
                 "description": item.description,
                 "parameters": item.parameters,
+                "minimum_role": item.min_role.value,
+                "sensitivity": item.sensitivity.value,
             }
             for item in candidates
         ]
@@ -99,7 +109,9 @@ class ClaudeIntentSelector:
             max_tokens=500,
             system=(
                 "Select only from the supplied approved-query catalog. "
-                "Never request, generate, transform, or return SQL."
+                "Never request, generate, transform, or return SQL. When multiple queries "
+                "match the same intent, choose the richest query whose minimum role is present "
+                "in the supplied access-filtered catalog."
             ),
             messages=[
                 {
@@ -156,6 +168,7 @@ class ChatService:
 
     async def ask(self, prompt: str, role: Role) -> dict[str, Any]:
         candidates = await self.catalog.search(prompt, role)
+        candidates = self._apply_demo_detail_policy(prompt, candidates)
         catalog_id, parameters, reason = await self.selector.select(prompt, candidates)
         record = next(item for item in candidates if item.id == catalog_id)
         result = await self.executor.execute(record, role, parameters)
@@ -165,4 +178,19 @@ class ChatService:
             "query": record.public(),
             "evidence": result,
         }
+
+    @staticmethod
+    def _apply_demo_detail_policy(
+        prompt: str, candidates: list[CatalogRecord]
+    ) -> list[CatalogRecord]:
+        normalized = prompt.lower()
+        if "asset" not in normalized or "open" not in normalized or "finding" not in normalized:
+            return candidates
+        asset_candidates = [item for item in candidates if "asset" in item.id]
+        if not asset_candidates:
+            return candidates
+        richest_role = max(ROLE_ACCESS[item.min_role] for item in asset_candidates)
+        return [
+            item for item in asset_candidates if ROLE_ACCESS[item.min_role] == richest_role
+        ]
 

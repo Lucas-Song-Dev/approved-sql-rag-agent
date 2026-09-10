@@ -15,7 +15,7 @@ class CatalogRepository:
         self.database = database
         self.embedder = embedder
 
-    async def search(self, prompt: str, role: Role, limit: int = 3) -> list[CatalogRecord]:
+    async def search(self, prompt: str, role: Role, limit: int = 10) -> list[CatalogRecord]:
         vector = _vector_literal(self.embedder.embed([prompt])[0])
         # Authorization is filtered before the distance expression ranks candidates.
         query = """

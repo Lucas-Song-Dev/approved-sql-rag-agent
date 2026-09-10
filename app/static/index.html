@@ -3,44 +3,99 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sentinel Query · Approved SQL Agent</title>
+  <title>Sentinel Query · Governed Security Assistant</title>
   <style>
-    :root{color-scheme:dark;--bg:#07110f;--panel:#0e1c18;--line:#24453b;--ink:#edf8f2;--muted:#91aa9f;--mint:#64f3b2;--gold:#f7c86a}
-    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 80% 0,#123b30 0,transparent 35%),var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui}
-    .shell{max-width:1120px;margin:auto;padding:28px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:52px}.brand{font-weight:760;letter-spacing:-.02em}.brand i{display:inline-block;width:10px;height:10px;background:var(--mint);border-radius:50%;box-shadow:0 0 18px var(--mint);margin-right:10px}
-    select,button,input{font:inherit}.role{background:#10221d;border:1px solid var(--line);color:var(--ink);padding:9px 13px;border-radius:10px}
-    .hero{max-width:750px;margin-bottom:28px}.eyebrow{color:var(--mint);text-transform:uppercase;letter-spacing:.13em;font-size:12px;font-weight:700}.hero h1{font-size:clamp(38px,6vw,67px);line-height:1.02;letter-spacing:-.055em;margin:12px 0}.hero p{color:var(--muted);font-size:18px;max-width:650px}
-    .examples{display:flex;gap:8px;flex-wrap:wrap;margin:25px 0}.chip{border:1px solid var(--line);background:transparent;color:#bdd1c8;border-radius:999px;padding:8px 13px;cursor:pointer}.chip:hover{border-color:var(--mint);color:var(--mint)}
-    .composer,.result{background:rgba(14,28,24,.88);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px #0007}.composer{display:flex;padding:10px}.composer input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);padding:11px}.composer button{border:0;background:var(--mint);color:#062017;font-weight:750;border-radius:11px;padding:0 22px;cursor:pointer}
-    .result{margin-top:18px;padding:24px;display:none}.result.visible{display:block}.result h2{margin:0 0 6px;font-size:22px}.meta{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.badge{font-size:12px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--muted)}a.badge{text-decoration:none}a.badge:hover{border-color:var(--mint);color:var(--mint)}.badge.sensitivity{color:var(--gold)}.evidence{overflow:auto;background:#07110f;border-radius:10px;padding:14px;color:#c7ded4;white-space:pre-wrap}.error{color:#ff9b96}
-    footer{color:#587369;font-size:12px;margin-top:26px}@media(max-width:600px){.shell{padding:20px}.top{margin-bottom:34px}.composer button{padding:0 14px}}
+    :root{color-scheme:dark;--bg:#07110f;--panel:#0d1b17;--panel2:#11251f;--line:#25483d;--ink:#eef8f3;--muted:#91aaa0;--mint:#64f3b2;--gold:#f7c86a;--danger:#ff9b96}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 75% -10%,#174739 0,transparent 35%),var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui}
+    button,input,select{font:inherit}.app{max-width:1180px;margin:auto;padding:22px}.top{display:flex;align-items:center;justify-content:space-between;padding:8px 0 22px;border-bottom:1px solid #17342b}.brand{font-size:17px;font-weight:780;letter-spacing:-.02em}.brand i{display:inline-block;width:10px;height:10px;margin-right:10px;border-radius:50%;background:var(--mint);box-shadow:0 0 18px var(--mint)}.status{color:var(--muted);font-size:13px}.status b{color:var(--mint)}
+    .layout{display:grid;grid-template-columns:290px 1fr;gap:22px;padding-top:22px}.side,.chat{background:rgba(13,27,23,.9);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px #0005}.side{padding:20px;height:max-content;position:sticky;top:22px}.label{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted);font-weight:750}.side h2{margin:7px 0 5px;font-size:21px}.side p{color:var(--muted);margin:0 0 17px}.role{width:100%;padding:11px 12px;color:var(--ink);background:#0a1714;border:1px solid var(--line);border-radius:10px}.access{margin-top:16px;padding:14px;background:var(--panel2);border-radius:12px}.access strong{display:block;color:var(--mint);margin-bottom:5px}.flow{margin-top:20px;display:grid;gap:9px}.step{display:flex;gap:9px;color:var(--muted);font-size:13px}.step span{display:grid;place-items:center;flex:0 0 22px;height:22px;border:1px solid var(--line);border-radius:50%;color:var(--mint);font-size:11px}
+    .chat{min-height:720px;display:flex;flex-direction:column;overflow:hidden}.chathead{padding:20px 24px;border-bottom:1px solid var(--line)}.chathead h1{font-size:25px;letter-spacing:-.03em;margin:0}.chathead p{margin:4px 0 0;color:var(--muted)}.messages{flex:1;padding:24px;display:flex;flex-direction:column;gap:18px;overflow:auto}.message{display:flex;gap:11px;max-width:92%}.message.user{align-self:flex-end;flex-direction:row-reverse}.avatar{display:grid;place-items:center;flex:0 0 32px;height:32px;border-radius:9px;background:#183b30;color:var(--mint);font-weight:800}.user .avatar{background:#263a34;color:var(--ink)}.bubble{padding:13px 15px;border-radius:4px 15px 15px;background:var(--panel2);border:1px solid var(--line)}.user .bubble{background:#1d4d3d;border-color:#33705c;border-radius:15px 4px 15px 15px}.bubble p{margin:0}.thinking{color:var(--muted)}.thinking:after{content:"";animation:dots 1.2s steps(4,end) infinite}@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%,100%{content:"..."}}
+    .answer{font-size:16px;white-space:pre-wrap}.meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.badge{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:3px 8px;color:var(--muted)}.badge.gold{color:var(--gold)}.evidence-wrap{margin-top:14px;overflow:auto;border:1px solid #1f3d34;border-radius:10px}table{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #19352c;vertical-align:top}th{color:var(--mint);font-weight:650;background:#091712}td{color:#c8ddd4}tr:last-child td{border-bottom:0}details{margin-top:11px;color:var(--muted);font-size:12px}summary{cursor:pointer}.error{color:var(--danger)}
+    .composer{padding:16px;border-top:1px solid var(--line);background:#091713}.prompt{display:flex;gap:10px;background:#0d211b;border:1px solid var(--line);padding:8px;border-radius:14px}.prompt input{flex:1;min-width:0;border:0;outline:0;color:var(--ink);background:transparent;padding:10px}.prompt button{border:0;border-radius:10px;padding:0 20px;background:var(--mint);color:#052017;font-weight:780;cursor:pointer}.prompt button:disabled{opacity:.55;cursor:wait}.hint{font-size:11px;color:#587369;margin:7px 4px 0}
+    @media(max-width:760px){.layout{grid-template-columns:1fr}.side{position:static}.chat{min-height:650px}.status{display:none}.message{max-width:100%}}
   </style>
 </head>
 <body>
-<main class="shell">
-  <header class="top"><div class="brand"><i></i>Sentinel Query</div><label>Demo role&nbsp;
-    <select id="role" class="role"><option>viewer</option><option>analyst</option><option>admin</option></select></label></header>
-  <section class="hero"><div class="eyebrow">Governed security intelligence</div><h1>Ask broadly.<br>Execute narrowly.</h1>
-    <p>Natural-language answers backed only by reviewed, versioned SQL. Retrieval is access-filtered, execution is read-only, and every result carries provenance.</p></section>
-  <div class="examples">
-    <button class="chip">Show critical vulnerabilities from the last 30 days</button>
-    <button class="chip">Which assets have the most open findings?</button>
-    <button class="chip">Summarize remediation SLA breaches</button>
+<main class="app">
+  <header class="top">
+    <div class="brand"><i></i>Sentinel Query</div>
+    <div class="status"><b>● Live</b> · Claude · pgvector · read-only PostgreSQL</div>
+  </header>
+  <div class="layout">
+    <aside class="side">
+      <div class="label">Authorization context</div>
+      <h2>Demo access level</h2>
+      <p>Change roles to re-run the same question through a different approved query.</p>
+      <select id="role" class="role" aria-label="Demo access role">
+        <option value="viewer">Viewer</option>
+        <option value="analyst">Analyst</option>
+        <option value="admin">Administrator</option>
+      </select>
+      <div class="access"><strong id="access-title"></strong><span id="access-copy"></span></div>
+      <div class="flow">
+        <div class="step"><span>1</span>Claude interprets the question.</div>
+        <div class="step"><span>2</span>RAG finds only role-approved SQL.</div>
+        <div class="step"><span>3</span>Parameters are validated and bound.</div>
+        <div class="step"><span>4</span>A read-only database role executes it.</div>
+      </div>
+    </aside>
+    <section class="chat">
+      <header class="chathead"><h1>Security Vulnerability Assistant</h1><p>Answers grounded in approved, versioned queries—not generated SQL.</p></header>
+      <div class="messages" id="messages">
+        <div class="message">
+          <div class="avatar">S</div>
+          <div class="bubble"><p>Ask me about vulnerability exposure. I will retrieve an approved SQL query, enforce your selected access level, execute it read-only, and explain the actual database results.</p></div>
+        </div>
+      </div>
+      <form class="composer" id="form">
+        <div class="prompt">
+          <input id="message" value="Which assets have the most open findings?" required minlength="2" aria-label="Question">
+          <button id="send">Ask</button>
+        </div>
+        <div class="hint">Demo tip: ask once, then switch roles to compare disclosed detail.</div>
+      </form>
+    </section>
   </div>
-  <form class="composer" id="form"><input id="message" placeholder="Ask a security question…" required minlength="2"><button>Run approved query</button></form>
-  <section class="result" id="result"><h2 id="answer"></h2><div id="reason"></div><div class="meta" id="meta"></div><pre class="evidence" id="evidence"></pre></section>
-  <footer>The model chooses intent and parameters—never SQL. Source integrity is verified before each read-only execution.</footer>
 </main>
 <script>
-const $=id=>document.getElementById(id), form=$('form'), result=$('result');
-document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{$('message').value=c.textContent;$('message').focus()});
-form.onsubmit=async e=>{e.preventDefault();result.classList.add('visible');$('answer').textContent='Checking approved catalog…';$('reason').textContent='';$('meta').innerHTML='';$('evidence').textContent='';
- try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','X-Demo-Role':$('role').value},body:JSON.stringify({message:$('message').value})});const d=await r.json();if(!r.ok)throw Error(d.detail||'Request failed');
- $('answer').textContent=d.answer;$('reason').className='';$('reason').textContent=d.selection_reason;const q=d.query,meta=$('meta');
- meta.replaceChildren();[[q.name,''],[`requires ${q.min_role}`,''],[`${q.sensitivity} sensitivity`,'sensitivity'],[`commit ${q.source_commit.slice(0,8)||'local'}`,'']].forEach(([text,kind])=>{const tag=document.createElement('span');tag.className=`badge ${kind}`;tag.textContent=text;meta.append(tag)});
- const source=document.createElement('a');source.className='badge';source.href=`${q.source_url}/blob/${q.source_commit}/${q.source_path}`;source.target='_blank';source.rel='noopener';source.textContent='view approved SQL source';meta.append(source);
- $('evidence').textContent=JSON.stringify(d.evidence,null,2)}
- catch(err){$('answer').textContent='Unable to answer';$('reason').className='error';$('reason').textContent=err.message}};
+const $=id=>document.getElementById(id);
+const access={
+  viewer:["Viewer access","Aggregate asset counts and priority totals. Individual finding details remain hidden."],
+  analyst:["Analyst access","Adds total exposure, critical counts, and maximum CVSS scores for prioritization."],
+  admin:["Administrator access","Adds CVE-level findings, due dates, remediation actions, owners, and audit notes."]
+};
+let lastPrompt="",busy=false;
+function setAccess(){const [title,copy]=access[$("role").value];$("access-title").textContent=title;$("access-copy").textContent=copy}
+function node(tag,className,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el}
+function addMessage(kind,text){
+  const row=node("div",`message ${kind}`),avatar=node("div","avatar",kind==="user"?"Y":"S"),bubble=node("div","bubble");
+  bubble.append(node("p",kind==="assistant"?"answer":"",text));row.append(avatar,bubble);$("messages").append(row);$("messages").scrollTop=$("messages").scrollHeight;return {row,bubble}
+}
+function renderTable(container,rows){
+  if(!rows.length)return;
+  const wrap=node("div","evidence-wrap"),table=node("table"),head=node("thead"),headRow=node("tr");
+  const columns=Object.keys(rows[0]);columns.forEach(column=>headRow.append(node("th","",column.replaceAll("_"," "))));head.append(headRow);table.append(head);
+  const body=node("tbody");rows.forEach(row=>{const tr=node("tr");columns.forEach(column=>{const value=row[column];tr.append(node("td","",value===null?"—":typeof value==="object"?JSON.stringify(value):String(value)))});body.append(tr)});table.append(body);wrap.append(table);container.append(wrap)
+}
+async function ask(prompt,{showUser=true}={}){
+  if(busy)return;busy=true;$("send").disabled=true;lastPrompt=prompt;
+  if(showUser)addMessage("user",prompt);
+  const pending=addMessage("assistant","Consulting the approved query catalog");pending.bubble.firstChild.className="thinking";
+  try{
+    const response=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json","X-Demo-Role":$("role").value},body:JSON.stringify({message:prompt})});
+    const data=await response.json();if(!response.ok)throw Error(data.detail||"Request failed");
+    pending.bubble.replaceChildren(node("p","answer",data.answer));
+    const meta=node("div","meta"),query=data.query;
+    [[query.name,""],[`requires ${query.min_role}`,""],[`${query.sensitivity} sensitivity`,"gold"],[`${data.evidence.row_count} row${data.evidence.row_count===1?"":"s"}`,""]].forEach(([text,kind])=>meta.append(node("span",`badge ${kind}`,text)));
+    pending.bubble.append(meta);renderTable(pending.bubble,data.evidence.rows);
+    const details=node("details"),summary=node("summary","","Why this query?"),provenance=node("p","",`${data.selection_reason} Source: ${query.source_path} @ ${query.source_commit.slice(0,8)}.`);
+    details.append(summary,provenance);pending.bubble.append(details)
+  }catch(error){pending.bubble.replaceChildren(node("p","error",error.message))}
+  finally{busy=false;$("send").disabled=false;$("messages").scrollTop=$("messages").scrollHeight}
+}
+$("form").addEventListener("submit",event=>{event.preventDefault();ask($("message").value.trim())});
+$("role").addEventListener("change",()=>{setAccess();if(lastPrompt){addMessage("assistant",`Access changed to ${$("role").selectedOptions[0].text}. Re-running the same question with the approved ${$("role").value} catalog.`);ask(lastPrompt,{showUser:false})}});
+setAccess();
 </script>
 </body>
 </html>
