@@ -1,0 +1,62 @@
+name: Sync security-team SQL catalog
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-catalog-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out AI-agent repository
+        uses: actions/checkout@v7
+        with:
+          path: agent
+
+      - name: Check out security-team repository
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ vars.SOURCE_REPOSITORY || 'Lucas-Song-Dev/security-vulnerability-api' }}
+          path: security-vulnerability-api
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: agent/pyproject.toml
+
+      - name: Cache local embedding model
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/fastembed
+          key: fastembed-bge-small-v1-${{ runner.os }}
+
+      - name: Install catalog sync
+        working-directory: agent
+        run: pip install .
+
+      - name: Validate configuration
+        env:
+          VECTOR_DATABASE_URL: ${{ secrets.VECTOR_DATABASE_URL }}
+        run: test -n "$VECTOR_DATABASE_URL"
+
+      - name: Embed and sync changed approved queries
+        working-directory: agent
+        env:
+          VECTOR_DATABASE_URL: ${{ secrets.VECTOR_DATABASE_URL }}
+          FASTEMBED_CACHE_PATH: ~/.cache/fastembed
+          SOURCE_REPOSITORY: ${{ vars.SOURCE_REPOSITORY || 'Lucas-Song-Dev/security-vulnerability-api' }}
+        run: |
+          sync-approved-queries \
+            --source-root ../security-vulnerability-api \
+            --source-url "https://github.com/${SOURCE_REPOSITORY}"

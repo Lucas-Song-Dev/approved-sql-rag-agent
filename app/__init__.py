@@ -1,0 +1,1 @@
+"""Approved SQL RAG agent."""

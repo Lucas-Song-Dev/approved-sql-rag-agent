@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sentinel Query · Approved SQL Agent</title>
+  <style>
+    :root{color-scheme:dark;--bg:#07110f;--panel:#0e1c18;--line:#24453b;--ink:#edf8f2;--muted:#91aa9f;--mint:#64f3b2;--gold:#f7c86a}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 80% 0,#123b30 0,transparent 35%),var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui}
+    .shell{max-width:1120px;margin:auto;padding:28px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:52px}.brand{font-weight:760;letter-spacing:-.02em}.brand i{display:inline-block;width:10px;height:10px;background:var(--mint);border-radius:50%;box-shadow:0 0 18px var(--mint);margin-right:10px}
+    select,button,input{font:inherit}.role{background:#10221d;border:1px solid var(--line);color:var(--ink);padding:9px 13px;border-radius:10px}
+    .hero{max-width:750px;margin-bottom:28px}.eyebrow{color:var(--mint);text-transform:uppercase;letter-spacing:.13em;font-size:12px;font-weight:700}.hero h1{font-size:clamp(38px,6vw,67px);line-height:1.02;letter-spacing:-.055em;margin:12px 0}.hero p{color:var(--muted);font-size:18px;max-width:650px}
+    .examples{display:flex;gap:8px;flex-wrap:wrap;margin:25px 0}.chip{border:1px solid var(--line);background:transparent;color:#bdd1c8;border-radius:999px;padding:8px 13px;cursor:pointer}.chip:hover{border-color:var(--mint);color:var(--mint)}
+    .composer,.result{background:rgba(14,28,24,.88);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px #0007}.composer{display:flex;padding:10px}.composer input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);padding:11px}.composer button{border:0;background:var(--mint);color:#062017;font-weight:750;border-radius:11px;padding:0 22px;cursor:pointer}
+    .result{margin-top:18px;padding:24px;display:none}.result.visible{display:block}.result h2{margin:0 0 6px;font-size:22px}.meta{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.badge{font-size:12px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--muted)}a.badge{text-decoration:none}a.badge:hover{border-color:var(--mint);color:var(--mint)}.badge.sensitivity{color:var(--gold)}.evidence{overflow:auto;background:#07110f;border-radius:10px;padding:14px;color:#c7ded4;white-space:pre-wrap}.error{color:#ff9b96}
+    footer{color:#587369;font-size:12px;margin-top:26px}@media(max-width:600px){.shell{padding:20px}.top{margin-bottom:34px}.composer button{padding:0 14px}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header class="top"><div class="brand"><i></i>Sentinel Query</div><label>Demo role&nbsp;
+    <select id="role" class="role"><option>viewer</option><option>analyst</option><option>admin</option></select></label></header>
+  <section class="hero"><div class="eyebrow">Governed security intelligence</div><h1>Ask broadly.<br>Execute narrowly.</h1>
+    <p>Natural-language answers backed only by reviewed, versioned SQL. Retrieval is access-filtered, execution is read-only, and every result carries provenance.</p></section>
+  <div class="examples">
+    <button class="chip">Show critical vulnerabilities from the last 30 days</button>
+    <button class="chip">Which assets have the most open findings?</button>
+    <button class="chip">Summarize remediation SLA breaches</button>
+  </div>
+  <form class="composer" id="form"><input id="message" placeholder="Ask a security question…" required minlength="2"><button>Run approved query</button></form>
+  <section class="result" id="result"><h2 id="answer"></h2><div id="reason"></div><div class="meta" id="meta"></div><pre class="evidence" id="evidence"></pre></section>
+  <footer>The model chooses intent and parameters—never SQL. Source integrity is verified before each read-only execution.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id), form=$('form'), result=$('result');
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{$('message').value=c.textContent;$('message').focus()});
+form.onsubmit=async e=>{e.preventDefault();result.classList.add('visible');$('answer').textContent='Checking approved catalog…';$('reason').textContent='';$('meta').innerHTML='';$('evidence').textContent='';
+ try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','X-Demo-Role':$('role').value},body:JSON.stringify({message:$('message').value})});const d=await r.json();if(!r.ok)throw Error(d.detail||'Request failed');
+ $('answer').textContent=d.answer;$('reason').className='';$('reason').textContent=d.selection_reason;const q=d.query,meta=$('meta');
+ meta.replaceChildren();[[q.name,''],[`requires ${q.min_role}`,''],[`${q.sensitivity} sensitivity`,'sensitivity'],[`commit ${q.source_commit.slice(0,8)||'local'}`,'']].forEach(([text,kind])=>{const tag=document.createElement('span');tag.className=`badge ${kind}`;tag.textContent=text;meta.append(tag)});
+ const source=document.createElement('a');source.className='badge';source.href=`${q.source_url}/blob/${q.source_commit}/${q.source_path}`;source.target='_blank';source.rel='noopener';source.textContent='view approved SQL source';meta.append(source);
+ $('evidence').textContent=JSON.stringify(d.evidence,null,2)}
+ catch(err){$('answer').textContent='Unable to answer';$('reason').className='error';$('reason').textContent=err.message}};
+</script>
+</body>
+</html>

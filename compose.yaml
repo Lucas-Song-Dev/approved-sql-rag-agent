@@ -1,0 +1,81 @@
+services:
+  vector-db:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: catalog
+      POSTGRES_USER: catalog
+      POSTGRES_PASSWORD: catalog
+    volumes:
+      - vector-data:/var/lib/postgresql/data
+      - ./db/vector-init.sql:/docker-entrypoint-initdb.d/001-vector.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalog -d catalog"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  security-db:
+    build:
+      context: ${SECURITY_SOURCE_DIR:-../security-vulnerability-api}
+      dockerfile: db/Dockerfile
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: vulnerabilities
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      APP_DB_PASSWORD: vulnerability_demo
+    volumes:
+      - security-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vulnerabilities"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  catalog-sync:
+    build: .
+    user: "0:0"
+    command:
+      - sync-approved-queries
+      - --source-root
+      - /security-source
+      - --source-url
+      - ${SOURCE_URL:-https://github.com/Lucas-Song-Dev/security-vulnerability-api}
+    environment:
+      VECTOR_DATABASE_URL: postgresql://catalog:catalog@vector-db:5432/catalog
+      FASTEMBED_CACHE_PATH: /models
+      HOME: /tmp
+    volumes:
+      - model-cache:/models
+      - ${SECURITY_SOURCE_DIR:-../security-vulnerability-api}:/security-source:ro
+    depends_on:
+      vector-db:
+        condition: service_healthy
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      VECTOR_DATABASE_URL: postgresql://catalog:catalog@vector-db:5432/catalog
+      SECURITY_DATABASE_URL: postgresql://vulnerability_app:vulnerability_demo@security-db:5432/vulnerabilities
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      FASTEMBED_CACHE_PATH: /models
+      HOME: /tmp
+    volumes:
+      - model-cache:/models
+    depends_on:
+      vector-db:
+        condition: service_healthy
+      security-db:
+        condition: service_healthy
+      catalog-sync:
+        condition: service_completed_successfully
+
+volumes:
+  vector-data:
+  security-data:
+  model-cache:
