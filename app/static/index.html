@@ -25,7 +25,7 @@
     <aside class="side">
       <div class="label">Authorization context</div>
       <h2>Demo access level</h2>
-      <p>Change roles to re-run the same question through a different approved query.</p>
+      <p>Choose a role, then ask or paste the question again to compare approved results.</p>
       <select id="role" class="role" aria-label="Demo access role">
         <option value="viewer">Viewer</option>
         <option value="analyst">Analyst</option>
@@ -52,7 +52,7 @@
           <input id="message" value="Which assets have the most open findings?" required minlength="2" aria-label="Question">
           <button id="send">Ask</button>
         </div>
-        <div class="hint">Demo tip: ask once, then switch roles to compare disclosed detail.</div>
+        <div class="hint">Demo tip: switch roles, then press Ask again to compare disclosed detail.</div>
       </form>
     </section>
   </div>
@@ -64,7 +64,7 @@ const access={
   analyst:["Analyst access","Adds total exposure, critical counts, and maximum CVSS scores for prioritization."],
   admin:["Administrator access","Adds CVE-level findings, due dates, remediation actions, owners, and audit notes."]
 };
-let lastPrompt="",busy=false;
+let busy=false;
 function setAccess(){const [title,copy]=access[$("role").value];$("access-title").textContent=title;$("access-copy").textContent=copy}
 function node(tag,className,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el}
 function addMessage(kind,text){
@@ -78,7 +78,7 @@ function renderTable(container,rows){
   const body=node("tbody");rows.forEach(row=>{const tr=node("tr");columns.forEach(column=>{const value=row[column];tr.append(node("td","",value===null?"—":typeof value==="object"?JSON.stringify(value):String(value)))});body.append(tr)});table.append(body);wrap.append(table);container.append(wrap)
 }
 async function ask(prompt,{showUser=true}={}){
-  if(busy)return;busy=true;$("send").disabled=true;lastPrompt=prompt;
+  if(busy)return;busy=true;$("send").disabled=true;
   if(showUser)addMessage("user",prompt);
   const pending=addMessage("assistant","Consulting the approved query catalog");pending.bubble.firstChild.className="thinking";
   try{
@@ -94,7 +94,7 @@ async function ask(prompt,{showUser=true}={}){
   finally{busy=false;$("send").disabled=false;$("messages").scrollTop=$("messages").scrollHeight}
 }
 $("form").addEventListener("submit",event=>{event.preventDefault();ask($("message").value.trim())});
-$("role").addEventListener("change",()=>{setAccess();if(lastPrompt){addMessage("assistant",`Access changed to ${$("role").selectedOptions[0].text}. Re-running the same question with the approved ${$("role").value} catalog.`);ask(lastPrompt,{showUser:false})}});
+$("role").addEventListener("change",setAccess);
 setAccess();
 </script>
 </body>
