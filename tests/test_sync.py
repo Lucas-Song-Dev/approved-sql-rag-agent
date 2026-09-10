@@ -72,6 +72,13 @@ class FakeConnection:
     async def execute(self, statement, *args):
         if "INSERT INTO approved_queries" in statement:
             self.hashes[args[0]] = args[5]
+        elif "DELETE FROM approved_queries" in statement:
+            active_ids = set(args[1])
+            self.hashes = {
+                query_id: value
+                for query_id, value in self.hashes.items()
+                if query_id in active_ids
+            }
 
     def transaction(self):
         return FakeTransaction()
@@ -120,3 +127,10 @@ result_columns:
     await sync("postgresql://unused", queries, "commit-1", "https://example/source", embedder)
     await sync("postgresql://unused", queries, "commit-2", "https://example/source", embedder)
     assert embedder.calls == 1
+
+    queries[0].catalog_hash = "f" * 64
+    await sync("postgresql://unused", queries, "commit-3", "https://example/source", embedder)
+    assert embedder.calls == 2
+
+    await sync("postgresql://unused", [], "commit-4", "https://example/source", embedder)
+    assert connection.hashes == {}
