@@ -3,7 +3,14 @@ from contextlib import asynccontextmanager
 import pytest
 
 from app.domain import CatalogRecord, Role, Sensitivity
-from app.executor import ExecutionError, QueryExecutor, bind_query, validate_parameter_values
+from app.executor import (
+    ExecutionError,
+    QueryBudgetExceeded,
+    QueryExecutor,
+    bind_query,
+    parse_plan_estimate,
+    validate_parameter_values,
+)
 from app.sql_validation import content_hash
 
 
@@ -71,6 +78,10 @@ class FakeConnection:
     async def execute(self, statement: str):
         self.executed.append(statement)
 
+    async def fetchval(self, query: str, *args, **kwargs):
+        self.executed.append(query)
+        return [{"Plan": {"Total Cost": 12.5, "Plan Rows": 4}}]
+
     async def fetch(self, query: str, *args, **kwargs):
         self.executed.append(query)
         return [{"id": 7}]
@@ -91,7 +102,10 @@ async def test_executor_checks_role_hash_and_readonly_transaction() -> None:
     executor = QueryExecutor(database, timeout_ms=1000, row_cap=10)
     result = await executor.execute(record(), Role.analyst, {"owner": "sam"})
     assert result["rows"] == [{"id": 7}]
+    assert result["estimated_cost"] == 12.5
+    assert result["estimated_rows"] == 4
     assert database.conn.executed[0].startswith("SET LOCAL statement_timeout")
+    assert database.conn.executed[1].startswith("EXPLAIN (FORMAT JSON)")
 
     tampered = record()
     tampered.sql_text += " AND true"
@@ -100,3 +114,33 @@ async def test_executor_checks_role_hash_and_readonly_transaction() -> None:
 
     with pytest.raises(PermissionError):
         await executor.execute(record(), Role.viewer, {"owner": "sam"})
+
+
+def test_plan_estimate_parsing_and_budget_rejection() -> None:
+    assert parse_plan_estimate('[{"Plan":{"Total Cost":42.25,"Plan Rows":12}}]') == (42.25, 12)
+    nested = [
+        {
+            "Plan": {
+                "Total Cost": 20,
+                "Plan Rows": 10,
+                "Plans": [{"Total Cost": 19, "Plan Rows": 500}],
+            }
+        }
+    ]
+    assert parse_plan_estimate(nested) == (20.0, 500)
+
+
+@pytest.mark.asyncio
+async def test_executor_rejects_over_budget_query_before_fetch() -> None:
+    database = FakeDatabase()
+    executor = QueryExecutor(
+        database,
+        timeout_ms=1000,
+        row_cap=10,
+        max_plan_cost=10,
+        max_plan_rows=100,
+    )
+    with pytest.raises(QueryBudgetExceeded) as raised:
+        await executor.execute(record(), Role.analyst, {"owner": "sam"})
+    assert raised.value.catalog_id == "findings-by-owner"
+    assert not any(statement.startswith("SELECT *") for statement in database.conn.executed)

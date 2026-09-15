@@ -40,7 +40,10 @@ class SourceQuery:
         )
 
 
-def load_queries(source_root: Path, metadata_glob: str = "**/*.y*ml") -> list[SourceQuery]:
+def load_queries(
+    source_root: Path,
+    metadata_glob: str = "approved_queries/**/*.y*ml",
+) -> list[SourceQuery]:
     root = source_root.resolve()
     queries: list[SourceQuery] = []
     seen_ids: set[str] = set()

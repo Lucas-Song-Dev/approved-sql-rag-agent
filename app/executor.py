@@ -1,4 +1,6 @@
+import json
 import re
+import time
 from datetime import date, datetime
 from typing import Any
 
@@ -16,6 +18,14 @@ from app.sql_validation import (
 
 class ExecutionError(ValueError):
     pass
+
+
+class QueryBudgetExceeded(ExecutionError):
+    def __init__(self, catalog_id: str, estimated_cost: float, estimated_rows: int) -> None:
+        self.catalog_id = catalog_id
+        self.estimated_cost = estimated_cost
+        self.estimated_rows = estimated_rows
+        super().__init__("Query exceeded the configured planner budget")
 
 
 def validate_parameter_values(specs: dict[str, Any], values: dict[str, Any]) -> None:
@@ -94,10 +104,19 @@ def bind_query(sql: str, values: dict[str, Any]) -> tuple[str, list[Any]]:
 
 
 class QueryExecutor:
-    def __init__(self, database: PoolManager, timeout_ms: int, row_cap: int) -> None:
+    def __init__(
+        self,
+        database: PoolManager,
+        timeout_ms: int,
+        row_cap: int,
+        max_plan_cost: float = float("inf"),
+        max_plan_rows: int = 2**63 - 1,
+    ) -> None:
         self.database = database
         self.timeout_ms = timeout_ms
         self.row_cap = row_cap
+        self.max_plan_cost = max_plan_cost
+        self.max_plan_rows = max_plan_rows
 
     async def execute(
         self, record: CatalogRecord, role: Role, parameters: dict[str, Any]
@@ -114,12 +133,55 @@ class QueryExecutor:
             f"SELECT * FROM ({query}) AS approved_result LIMIT {self.row_cap + 1}"
         )
 
+        started = time.perf_counter()
         async with self.database.connection() as connection:
             async with connection.transaction(readonly=True):
                 await connection.execute(f"SET LOCAL statement_timeout = '{self.timeout_ms}ms'")
+                plan_value = await connection.fetchval(
+                    f"EXPLAIN (FORMAT JSON) {limited_query}",
+                    *arguments,
+                    timeout=self.timeout_ms / 1000,
+                )
+                estimated_cost, estimated_rows = parse_plan_estimate(plan_value)
+                if (
+                    estimated_cost > self.max_plan_cost
+                    or estimated_rows > self.max_plan_rows
+                ):
+                    raise QueryBudgetExceeded(record.id, estimated_cost, estimated_rows)
                 rows = await connection.fetch(
                     limited_query, *arguments, timeout=self.timeout_ms / 1000
                 )
+        duration_ms = round((time.perf_counter() - started) * 1000, 2)
         truncated = len(rows) > self.row_cap
         output = [dict(row) for row in rows[: self.row_cap]]
-        return {"rows": output, "row_count": len(output), "truncated": truncated}
+        return {
+            "rows": output,
+            "row_count": len(output),
+            "truncated": truncated,
+            "estimated_cost": estimated_cost,
+            "estimated_rows": estimated_rows,
+            "duration_ms": duration_ms,
+        }
+
+
+def parse_plan_estimate(value: Any) -> tuple[float, int]:
+    if isinstance(value, str):
+        value = json.loads(value)
+    if not isinstance(value, list) or not value or not isinstance(value[0], dict):
+        raise ExecutionError("Database returned an invalid query plan")
+    plan = value[0].get("Plan")
+    if not isinstance(plan, dict):
+        raise ExecutionError("Database returned an invalid query plan")
+    try:
+        return float(plan["Total Cost"]), _max_plan_rows(plan)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ExecutionError("Database query plan omitted cost estimates") from exc
+
+
+def _max_plan_rows(plan: dict[str, Any]) -> int:
+    rows = int(plan["Plan Rows"])
+    children = plan.get("Plans", [])
+    if not isinstance(children, list):
+        raise ValueError("Plans must be a list")
+    child_rows = [_max_plan_rows(child) for child in children if isinstance(child, dict)]
+    return max([rows, *child_rows])

@@ -172,12 +172,26 @@ class ChatService:
         candidates = self._apply_demo_detail_policy(prompt, candidates)
         catalog_id, parameters, reason = await self.selector.select(prompt, candidates)
         record = next(item for item in candidates if item.id == catalog_id)
-        result = await self.executor.execute(record, role, parameters)
+        audit_context = {
+            "catalog_id": record.id,
+            "sql_hash": record.sql_hash,
+            "source_commit": record.source_commit,
+            "parameter_names": sorted(parameters),
+        }
+        result: dict[str, Any] = {}
+        try:
+            result = await self.executor.execute(record, role, parameters)
+            answer = await self.selector.summarize(prompt, record, result)
+        except Exception as exc:
+            exc.audit_context = audit_context
+            exc.execution_result = result
+            raise
         return {
-            "answer": await self.selector.summarize(prompt, record, result),
+            "answer": answer,
             "selection_reason": reason,
             "query": record.public(),
             "evidence": result,
+            "_audit": audit_context,
         }
 
     @staticmethod

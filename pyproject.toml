@@ -14,12 +14,14 @@ dependencies = [
   "PyYAML>=6,<7",
   "sqlglot>=26,<29",
   "uvicorn[standard]>=0.32,<1",
+  "workos>=10,<11",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=8,<9",
-  "pytest-asyncio>=0.24,<1",
+  "pytest>=9.0.3,<10",
+  "pytest-asyncio>=1.2,<2",
+  "pip-audit>=2.7,<3",
   "ruff>=0.8,<1",
 ]
 
@@ -36,6 +38,9 @@ packages = ["app"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+  "integration: requires live catalog and security PostgreSQL services",
+]
 
 [tool.ruff]
 line-length = 100

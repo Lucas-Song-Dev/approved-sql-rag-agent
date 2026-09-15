@@ -1,12 +1,10 @@
 from contextlib import asynccontextmanager
 
 import pytest
-from fastapi import HTTPException
 
 from app.catalog import CatalogRepository, can_access
 from app.domain import Role
 from app.embedder import DeterministicEmbedder
-from app.main import current_role
 
 
 class RecordingConnection:
@@ -30,12 +28,9 @@ class FakePool:
 
 
 def test_role_validation_and_access_matrix() -> None:
-    assert current_role("analyst") is Role.analyst
     assert can_access(Role.viewer, Role.viewer)
     assert not can_access(Role.viewer, Role.analyst)
     assert can_access(Role.admin, Role.analyst)
-    with pytest.raises(HTTPException):
-        current_role("superuser")
 
 
 @pytest.mark.asyncio

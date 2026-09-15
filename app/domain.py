@@ -28,6 +28,16 @@ ROLE_ACCESS = {
 }
 
 
+@dataclass(frozen=True)
+class Identity:
+    user_id: str
+    email: str
+    organization_id: str
+    role: Role
+    permissions: tuple[str, ...] = ()
+    display_name: str = ""
+
+
 @dataclass
 class CatalogRecord:
     id: str

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sign in · Sentinel Query</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0d0d0d;--card:#171717;--line:#303030;--ink:#f5f5f5;--muted:#a3a3a3;--accent:#10a37f}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui;display:grid;place-items:center}
+    .shell{width:min(440px,calc(100% - 32px));text-align:center}.logo{display:inline-grid;place-items:center;width:54px;height:54px;border-radius:16px;background:var(--accent);font-weight:800;font-size:23px;margin-bottom:24px}
+    h1{font-size:30px;letter-spacing:-.04em;margin:0 0 10px}p{color:var(--muted);margin:0}.card{margin-top:28px;padding:28px;background:var(--card);border:1px solid var(--line);border-radius:16px;text-align:left;box-shadow:0 24px 80px #0006}
+    .label{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}.card h2{font-size:18px;margin:8px 0 6px}.card p{font-size:14px}.button{display:block;width:100%;margin-top:22px;padding:13px 16px;border:0;border-radius:10px;background:var(--accent);color:white;text-align:center;text-decoration:none;font-weight:700;cursor:pointer}.button.secondary{background:#262626;border:1px solid var(--line)}
+    .user{margin-top:16px;padding:12px 14px;border-radius:10px;background:#202020}.user strong,.user span{display:block}.user span{color:var(--muted);font-size:13px}.fine{margin-top:20px;font-size:12px;color:#747474}.features{display:flex;justify-content:center;gap:16px;margin-top:26px;color:#787878;font-size:12px;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="logo">S</div>
+    <h1>Welcome to Sentinel Query</h1>
+    <p>A governed AI assistant for approved security queries.</p>
+    <section class="card">
+      <div class="label">Secure access</div>
+      <div id="signed-out">
+        <h2>Sign in to continue</h2>
+        <p>Authentication is handled by WorkOS. The demo reads only your name and email.</p>
+        <a class="button" href="/auth/login">Continue with WorkOS</a>
+      </div>
+      <div id="signed-in" hidden>
+        <h2>You're signed in</h2>
+        <div class="user"><strong id="name"></strong><span id="email"></span></div>
+        <a class="button" href="/chat">Open security assistant</a>
+        <form action="/auth/logout" method="post"><button class="button secondary">Sign out</button></form>
+      </div>
+    </section>
+    <div class="features"><span>Approved SQL only</span><span>Read-only execution</span><span>Audited results</span></div>
+    <p class="fine">Synthetic demonstration data. No RBC systems or information are connected.</p>
+  </main>
+  <script>
+    fetch("/api/me").then(async response=>{
+      if(!response.ok)return;
+      const user=await response.json();
+      document.getElementById("signed-out").hidden=true;
+      document.getElementById("signed-in").hidden=false;
+      document.getElementById("name").textContent=user.name||user.email.split("@")[0];
+      document.getElementById("email").textContent=user.email;
+    });
+  </script>
+</body>
+</html>

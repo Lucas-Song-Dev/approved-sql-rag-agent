@@ -63,6 +63,12 @@ services:
       VECTOR_DATABASE_URL: postgresql://catalog:catalog@vector-db:5432/catalog
       SECURITY_DATABASE_URL: postgresql://vulnerability_app:vulnerability_demo@security-db:5432/vulnerabilities
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      WORKOS_API_KEY: ${WORKOS_API_KEY:-}
+      WORKOS_CLIENT_ID: ${WORKOS_CLIENT_ID:-}
+      WORKOS_COOKIE_PASSWORD: ${WORKOS_COOKIE_PASSWORD:-}
+      WORKOS_REDIRECT_URI: ${WORKOS_REDIRECT_URI:-http://localhost:8000/auth/callback}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://localhost:8000}
       FASTEMBED_CACHE_PATH: /models
       HOME: /tmp
     volumes:

@@ -33,7 +33,10 @@ result_columns:
   - {name: id, type: integer}
 """,
     )
-    queries = load_queries(tmp_path, "approved_queries/**/*.y*ml")
+    workflow = tmp_path / ".github" / "workflows"
+    workflow.mkdir(parents=True)
+    (workflow / "ci.yml").write_text("name: CI\non: push\n")
+    queries = load_queries(tmp_path)
     assert len(queries) == 1
     assert queries[0].source_path == "approved_queries/open-findings.sql"
     assert len(queries[0].sql_hash) == 64

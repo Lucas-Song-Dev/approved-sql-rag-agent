@@ -1,0 +1,58 @@
+name: Nightly governance verification
+
+on:
+  schedule:
+    - cron: "23 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: agent
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: ${{ vars.SOURCE_REPOSITORY || 'Lucas-Song-Dev/security-vulnerability-api' }}
+          path: security-vulnerability-api
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: agent/pyproject.toml
+      - name: Install test dependencies
+        working-directory: agent
+        run: python -m pip install -e '.[dev]'
+      - name: Start isolated databases
+        working-directory: agent
+        run: docker compose up -d --wait vector-db security-db
+      - name: Run catalog sync
+        working-directory: agent
+        env:
+          VECTOR_DATABASE_URL: postgresql://catalog:catalog@localhost:5432/catalog
+          FASTEMBED_CACHE_PATH: ~/.cache/fastembed
+        run: >-
+          sync-approved-queries
+          --source-root ../security-vulnerability-api
+          --source-url https://github.com/${{ vars.SOURCE_REPOSITORY || 'Lucas-Song-Dev/security-vulnerability-api' }}
+      - name: Verify identity-to-query governance controls
+        working-directory: agent
+        env:
+          RUN_INTEGRATION: "1"
+          VECTOR_DATABASE_URL: postgresql://catalog:catalog@localhost:5432/catalog
+          SECURITY_DATABASE_URL: postgresql://vulnerability_app:vulnerability_demo@localhost:5433/vulnerabilities
+        run: pytest -m integration --junitxml=governance-results.xml
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always()
+        with:
+          name: governance-test-evidence
+          path: agent/governance-results.xml
+      - name: Database logs on failure
+        if: failure()
+        working-directory: agent
+        run: docker compose logs vector-db security-db
