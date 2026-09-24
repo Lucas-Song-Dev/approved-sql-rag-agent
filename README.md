@@ -1,14 +1,16 @@
-# Approved SQL RAG Agent
+# BrainRidge FinTech AI Accelerator: Governed SQL & RAG Agent
 
 [![CI](https://github.com/Lucas-Song-Dev/approved-sql-rag-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Lucas-Song-Dev/approved-sql-rag-agent/actions/workflows/ci.yml)
 [![Nightly governance](https://github.com/Lucas-Song-Dev/approved-sql-rag-agent/actions/workflows/nightly-governance.yml/badge.svg)](https://github.com/Lucas-Song-Dev/approved-sql-rag-agent/actions/workflows/nightly-governance.yml)
 
-A recruiter-ready FastAPI demo that answers security questions using only reviewed SQL from
-the external
+A production-grade FinTech AI Accelerator built for **BrainRidge Consulting**'s enterprise
+financial services practice. The system answers security, compliance, and infrastructure
+questions across enterprise systems of record using only pre-reviewed, cryptographically verified
+SQL from the external
 [`security-vulnerability-api`](https://github.com/Lucas-Song-Dev/security-vulnerability-api)
-repository. FastEmbed retrieves an access-filtered
-catalog entry; Claude may choose an entry and fill parameters, but the model is never given a
-way to submit SQL.
+service. Local FastEmbed semantic retrieval searches access-filtered catalog entries; Anthropic Claude
+selects catalog IDs and binds strongly-typed parameters, but the model is architecturally prevented
+from generating or executing untrusted SQL.
 
 ## Safety model
 

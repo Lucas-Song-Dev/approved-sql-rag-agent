@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   sync:
-    runs-on: [self-hosted, linux, x64, rbc-demo]
+    runs-on: [self-hosted, linux, x64, brainridge-demo]
     timeout-minutes: 15
     steps:
       - name: Check out AI-agent repository

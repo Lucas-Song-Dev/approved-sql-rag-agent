@@ -47,6 +47,11 @@ def configure_logging() -> None:
 class GovernanceMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: Any, allowed_origin: str) -> None:
         super().__init__(app)
+        self.allowed_origins = {
+            item.strip().rstrip("/")
+            for item in allowed_origin.split(",")
+            if item.strip()
+        }
         self.allowed_origin = allowed_origin.rstrip("/")
         configure_logging()
         self.logger = logging.getLogger("sentinel")
@@ -56,8 +61,14 @@ class GovernanceMiddleware(BaseHTTPMiddleware):
         request.state.request_id = request_id
         started = time.perf_counter()
         origin = request.headers.get("origin")
+        host = request.headers.get("host")
         if request.method not in {"GET", "HEAD", "OPTIONS"} and origin:
-            if origin.rstrip("/") != self.allowed_origin:
+            cleaned = origin.rstrip("/")
+            is_allowed = (
+                cleaned in self.allowed_origins
+                or (host and cleaned in {f"http://{host}", f"https://{host}"})
+            )
+            if not is_allowed:
                 response = Response("Cross-origin request denied", status_code=403)
             else:
                 response = await self._call_safely(request, call_next)

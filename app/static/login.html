@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sign in · Sentinel Query</title>
+  <title>Sign in · BrainRidge Sentinel AI</title>
   <style>
     :root{color-scheme:dark;--bg:#0d0d0d;--card:#171717;--line:#303030;--ink:#f5f5f5;--muted:#a3a3a3;--accent:#10a37f}
     *{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui;display:grid;place-items:center}
@@ -15,9 +15,9 @@
 </head>
 <body>
   <main class="shell">
-    <div class="logo">S</div>
-    <h1>Welcome to Sentinel Query</h1>
-    <p>A governed AI assistant for approved security queries.</p>
+    <div class="logo">B</div>
+    <h1>BrainRidge FinTech AI</h1>
+    <p>Governed agentic data access for enterprise financial systems.</p>
     <section class="card">
       <div class="label">Secure access</div>
       <div id="signed-out">
@@ -28,12 +28,12 @@
       <div id="signed-in" hidden>
         <h2>You're signed in</h2>
         <div class="user"><strong id="name"></strong><span id="email"></span></div>
-        <a class="button" href="/chat">Open security assistant</a>
+        <a class="button" href="/chat">Open FinTech Assistant</a>
         <form action="/auth/logout" method="post"><button class="button secondary">Sign out</button></form>
       </div>
     </section>
     <div class="features"><span>Approved SQL only</span><span>Read-only execution</span><span>Audited results</span></div>
-    <p class="fine">Synthetic demonstration data. No RBC systems or information are connected.</p>
+    <p class="fine">Synthetic demonstration data for BrainRidge Consulting FinTech practice. Fictional financial infrastructure assets.</p>
   </main>
   <script>
     fetch("/api/me").then(async response=>{

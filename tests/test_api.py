@@ -141,6 +141,12 @@ def test_governance_headers_and_cross_origin_protection() -> None:
         json={"message": "findings"},
     )
     assert denied.status_code == 403
+    same_host = client.post(
+        "/api/chat",
+        headers={"Origin": "http://testserver"},
+        json={"message": "findings"},
+    )
+    assert same_host.status_code == 200
 
 
 def test_chat_is_rate_limited_per_authenticated_user() -> None:

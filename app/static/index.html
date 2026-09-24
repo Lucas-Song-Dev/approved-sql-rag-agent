@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sentinel Query</title>
+  <title>BrainRidge Sentinel AI</title>
   <style>
     :root{color-scheme:dark;--bg:#212121;--side:#171717;--panel:#2f2f2f;--hover:#292929;--line:#3d3d3d;--ink:#ececec;--muted:#a7a7a7;--accent:#10a37f;--danger:#ff8585}
     *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,ui-sans-serif,system-ui}button,textarea,select{font:inherit}.app{display:grid;grid-template-columns:260px minmax(0,1fr);height:100vh;height:100dvh}
@@ -24,7 +24,7 @@
 <body>
 <div class="app">
   <aside>
-    <div class="brand"><div class="mark">S</div>Sentinel Query</div>
+    <div class="brand"><div class="mark">B</div>BrainRidge Sentinel</div>
     <button class="new-chat" id="new-chat" type="button"><span>＋</span> New chat</button>
     <div class="side-label">Demo access level</div>
     <div class="role-wrap">
@@ -40,7 +40,7 @@
     <div class="sidebar-bottom">
       <div class="profile"><div class="avatar" id="avatar">U</div><div class="profile-copy"><strong id="name">Loading…</strong><span id="email"></span></div></div>
       <div class="profile-actions">
-        <button class="side-button" id="show-tutorial" type="button">Tutorial</button>
+        <button class="side-button" id="show-tutorial" type="button">Architecture</button>
         <form action="/auth/logout" method="post"><button class="side-button">Sign out</button></form>
       </div>
     </div>
@@ -51,7 +51,7 @@
       <div class="messages" id="messages"></div>
     </div>
     <div class="composer-wrap">
-      <form class="composer" id="form"><div class="composer-row"><textarea id="prompt" rows="1" placeholder="Message Sentinel Query" required></textarea><button class="send" id="send" type="submit" aria-label="Send">↑</button></div></form>
+      <form class="composer" id="form"><div class="composer-row"><textarea id="prompt" rows="1" placeholder="Ask BrainRidge Sentinel about financial systems and vulnerabilities..." required></textarea><button class="send" id="send" type="submit" aria-label="Send">↑</button></div></form>
       <div class="composer-hint">Approved SQL only · Planner-budgeted · Read-only · Audited</div>
     </div>
   </main>
@@ -59,9 +59,9 @@
 <template id="empty-template">
   <section class="empty" id="empty">
     <div>
-      <div class="empty-mark">S</div>
-      <h1>How can I help with security data?</h1>
-      <p>I answer with approved, versioned SQL—not model-generated queries.</p>
+      <div class="empty-mark">B</div>
+      <h1>FinTech Security & Governance AI</h1>
+      <p>Answering enterprise questions with reviewed, cryptographic SQL—never model-generated queries.</p>
       <div class="starters">
         <button class="starter" type="button" data-prompt="Which assets have the most open findings?"><strong>Review exposed assets</strong><span>Compare disclosure by demo role</span></button>
         <button class="starter" type="button" data-prompt="Show critical unresolved vulnerabilities, severity critical and limit 10"><strong>Find critical vulnerabilities</strong><span>Use the approved severity query</span></button>
@@ -73,14 +73,14 @@
 </template>
 <div class="modal-backdrop" id="tutorial" hidden>
   <section class="modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
-    <div class="modal-head"><div><h2 id="tutorial-title">How Sentinel Query works</h2><p class="modal-sub">A quick tour of the controls behind every response.</p></div><button class="close" id="close-tutorial" type="button" aria-label="Close">×</button></div>
+    <div class="modal-head"><div><h2 id="tutorial-title">BrainRidge Enterprise Guardrail Architecture</h2><p class="modal-sub">How our FinTech AI Accelerator protects production banking databases.</p></div><button class="close" id="close-tutorial" type="button" aria-label="Close">×</button></div>
     <div class="tutorial-bars">
-      <div class="tutorial-bar"><span>1</span><div><strong>Choose a demo access level</strong><small>Switch Viewer, Analyst, or Admin to compare approved detail.</small></div></div>
-      <div class="tutorial-bar"><span>2</span><div><strong>Ask in plain language</strong><small>The model selects an approved query ID and validated parameters only.</small></div></div>
-      <div class="tutorial-bar"><span>3</span><div><strong>Review grounded evidence</strong><small>Results include rows, planner cost, runtime, sensitivity, and source commit.</small></div></div>
-      <div class="tutorial-bar"><span>4</span><div><strong>Switch between chats</strong><small>Each conversation is named from your first message and can be reopened from the sidebar.</small></div></div>
+      <div class="tutorial-bar"><span>1</span><div><strong>Identity & Pre-Filtering</strong><small>WorkOS SSO maps roles; pgvector filters catalog entries before semantic ranking.</small></div></div>
+      <div class="tutorial-bar"><span>2</span><div><strong>Zero Model-Generated SQL</strong><small>Claude selects pre-approved query IDs and typed parameters only.</small></div></div>
+      <div class="tutorial-bar"><span>3</span><div><strong>Cost & Safety Budgets</strong><small>PostgreSQL EXPLAIN cost planner validates query budget before read-only execution.</small></div></div>
+      <div class="tutorial-bar"><span>4</span><div><strong>Tamper-Proof Audit Trail</strong><small>All executions log durable evidence with redacted PII and suppressed SQL text.</small></div></div>
     </div>
-    <button class="got-it" id="got-it" type="button">Got it</button>
+    <button class="got-it" id="got-it" type="button">Understood</button>
   </section>
 </div>
 <script>
